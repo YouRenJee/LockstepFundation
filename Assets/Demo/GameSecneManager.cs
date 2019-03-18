@@ -8,22 +8,28 @@ using System;
 
 public class GameSecneManager : GameSingletom<GameSecneManager>
 {
-    public Fix64Vector2 RecyclePoint = new Fix64Vector2(300, 300);
-
-    private GameObject Player;
-    private GameObject Plane;
-    private GameObject tp;
-    private GameObject Bullet;
-    private Queue<OptionEvent> q = new Queue<OptionEvent>();
-
-    public int syncFrameid = 0;
-    private float stickDir = 0;
 
 
-    private Dictionary<int, MGFPlayer> players = new Dictionary<int, MGFPlayer>();
 
-    private List<MGFObject> dynamicObj = new List<MGFObject>();
-    public Quadtree qt;
+    
+
+    private Fix64Vector2 m_RecyclePoint = new Fix64Vector2(300, 300);
+    private ObjectPool m_Op = new ObjectPool();
+
+    private GameObject m_Player;
+    private GameObject m_Plane;
+    private GameObject m_tp;
+    //private GameObject Bullet;
+    //private Queue<OptionEvent> q = new Queue<OptionEvent>();
+
+    //public int syncFrameid = 0;
+    //private float stickDir = 0;
+
+
+    //private Dictionary<int, MGFPlayer> players = new Dictionary<int, MGFPlayer>();
+
+    //private List<MGFObject> dynamicObj = new List<MGFObject>();
+    //public Quadtree qt;
 
 
     public void SetDir(float dir)
@@ -31,17 +37,17 @@ public class GameSecneManager : GameSingletom<GameSecneManager>
         stickDir = dir;
     }
 
-    public void InputKey(OptionEvent opt)
-    {
-        q.Enqueue(opt);
-    }
+    //public void InputKey(OptionEvent opt)
+    //{
+    //    q.Enqueue(opt);
+    //}
 
     public void GameInit()
     {
-        Player = Resources.Load<GameObject>("Player/DefaultAvatar");
-        tp = Resources.Load<GameObject>("Ground/Ground");
-        Bullet = Resources.Load<GameObject>("Player/Shuriken");
-        Plane = Instantiate(tp,Vector3.zero,Quaternion.identity).gameObject;
+        m_Player = Resources.Load<GameObject>("Player/DefaultAvatar");
+        m_tp = Resources.Load<GameObject>("Ground/Ground");
+        //Bullet = Resources.Load<GameObject>("Player/Shuriken");
+        m_Plane = Instantiate(m_tp, Vector3.zero,Quaternion.identity).gameObject;
         CreatePlayer();
         CreateBullet(10);
         qt = new Quadtree(0, GetSecneSize(50, 50));
@@ -68,19 +74,19 @@ public class GameSecneManager : GameSingletom<GameSecneManager>
 
     }
 
-    private void CreateBullet(int num)
-    {
-        Queue<IRecycleAble> ls = new Queue<IRecycleAble>();
-        for (int i = 0; i < num; i++)
-        {
-            var l = Instantiate(Bullet, RecyclePoint.ToVector3(), Quaternion.identity, Plane.transform).GetComponent<MGFObject>();
-            l.IsCollisionAble = false;
-            l.IsTrigger = true;
-            l.IsStatic = false;
-            ls.Enqueue((IRecycleAble)l);
-        }
-        ObjectPool.AddNewClass("Bullet", ls);
-    }
+    //private void CreateBullet(int num)
+    //{
+    //    Queue<IRecycleAble> ls = new Queue<IRecycleAble>();
+    //    for (int i = 0; i < num; i++)
+    //    {
+    //        var l = Instantiate(Bullet, RecyclePoint.ToVector3(), Quaternion.identity, Plane.transform).GetComponent<MGFObject>();
+    //        l.IsCollisionAble = false;
+    //        l.IsTrigger = true;
+    //        l.IsStatic = false;
+    //        ls.Enqueue((IRecycleAble)l);
+    //    }
+    //    ObjectPool.AddNewClass("Bullet", ls);
+    //}
 
     private void AddObj()
     {
@@ -108,12 +114,6 @@ public class GameSecneManager : GameSingletom<GameSecneManager>
     public MGFObject[] GetObj()
     {
         return obj;
-    }
-
-    public void NewMGFObj()
-    {
-
-
     }
 
     public void DestroyMGFObj()

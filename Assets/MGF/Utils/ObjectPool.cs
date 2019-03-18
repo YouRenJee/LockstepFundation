@@ -1,42 +1,69 @@
-﻿using System.Collections;
+﻿using MGF.Math;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
-public static class ObjectPool
+public class ObjectPool
 {
-    private static Dictionary<string, Queue<IRecycleAble>> dic = new Dictionary<string, Queue<IRecycleAble>>();
 
-    public static void AddNewClass(string name, Queue<IRecycleAble>ls) 
+    private Dictionary<string, Queue<IRecycleAble>> rcDic = new Dictionary<string, Queue<IRecycleAble>>();
+    
+    /// <summary>
+    /// 增加一种新的对象
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="rc"></param>
+    public void AddNewObj(string name, Queue<IRecycleAble> rc)
     {
-        if (!dic.ContainsKey(name))
+        if (!rcDic.ContainsKey(name))
         {
-            dic.Add(name, ls);
+            rcDic.Add(name, rc);
         }
-    }
-
-    public static void DestoryObj(string name, IRecycleAble o) 
-    {
-        if (dic.ContainsKey(name))
+        else
         {
-            dic[name].Enqueue(o);
-            o.OnDestory();
-        }
-    }
-
-    public static T CreateObj<T> (string name) where T : MGFObject
-    {
-        if (dic.ContainsKey(name))
-        {
-            if (dic[name].Count > 0)
+            for (int i = 0; i < rc.Count; i++)
             {
-
-                IRecycleAble ls = dic[name].Dequeue();
-                ls.OnCreate();
-                return (T)ls;
+                rcDic[name].Enqueue(rc.Dequeue());
             }
         }
+    }
 
-        return null;
+
+    /// <summary>
+    /// 回收对象
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="rc"></param>
+    public void DestoryObj(string name, IRecycleAble rc)
+    {
+        Assert.IsTrue(rcDic.ContainsKey(name));
+
+        rcDic[name].Enqueue(rc);
+        rc.OnDestory();
+
+    }
+
+    /// <summary>
+    /// 创建对象
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public T CreateObj<T>(string name) where T : MGFObject
+    {
+        Assert.IsTrue(rcDic.ContainsKey(name));
+        if (rcDic[name].Count > 0)
+        {
+            IRecycleAble ls = rcDic[name].Dequeue();
+            ls.OnCreate();
+            return (T)ls;
+        }
+        else
+        {
+            throw new Exception("no obj exist!!!");
+        }
 
     }
 
