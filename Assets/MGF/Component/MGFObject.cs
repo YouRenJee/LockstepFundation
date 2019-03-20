@@ -37,9 +37,6 @@ public class MGFObject : MGFComponet
     //最小包围盒尺寸
     private Fix64Vector2 halfSize = new Fix64Vector2(0, 0);
 
-
-
-
     /// <summary>
     /// 初始化组件
     /// </summary>

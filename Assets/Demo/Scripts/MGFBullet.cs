@@ -17,7 +17,7 @@ public class MGFBullet : MGFObject, IRecycleAble
         m_aliveTime = m_aliveTime * Time.fixedDeltaTime;
     }
 
-    internal override void MGFStart()
+    internal override void MGFEnable()
     {
         m_NowFrame = 0;
     }

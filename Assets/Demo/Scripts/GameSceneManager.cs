@@ -38,45 +38,6 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
     private Fix64Vector2 m_RecyclePoint = new Fix64Vector2(300, 300);
     private Queue<Command> m_Opts = new Queue<Command>();
 
-    //private GameObject Bullet;
-
-    //public void InputKey(OptionEvent opt)
-    //{
-    //    q.Enqueue(opt);
-    //}
-
-    //public void SetDir(float dir)
-    //{
-    //    stickDir = dir;
-    //}
-
-    //private void Start()
-    //{
-    //    var type = typeof(IRecycleAble);
-
-    //    List<Type> types = new List<Type>();
-
-    //    foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-    //    {
-    //        foreach (var tp in assembly.GetTypes())
-    //        {
-    //            if (type.IsAssignableFrom(tp))
-    //            {
-    //                if (tp.IsClass && !tp.IsAbstract)
-    //                {
-    //                    types.Add(tp);
-    //                }
-    //            }
-    //        }
-    //    }
-    //    types.ForEach((t) =>
-    //    {
-    //        var instance = Activator.CreateInstance(t) as IRecycleAble;
-    //        Debug.Log(instance.RecycleName());
-    //        Debug.Log(instance.InitNum());
-    //    });
-
-    //}
 
     private void Start()
     {
@@ -136,13 +97,12 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
         obj.v.Show();
         obj.MoveTo(fv);
         obj.RotateTo(rot);
-        obj.MGFStart();
+        obj.MGFEnable();
         return obj;
     }
 
     public void DestroyFromPool(MGFObject obj)
     {
-        Debug.Log(((MGFBullet)obj).m_NowFrame);
         obj.v.Hide();
         obj.IsCollisionAble = false;
         m_Op.DestoryObj(obj.Tag, obj as IRecycleAble);

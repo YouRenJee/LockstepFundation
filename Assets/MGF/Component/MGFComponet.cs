@@ -8,7 +8,7 @@ public abstract class MGFComponet : MonoBehaviour
     {
     }
 
-    internal virtual void MGFStart()
+    internal virtual void MGFEnable()
     {
 
     }

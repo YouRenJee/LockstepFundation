@@ -29,7 +29,7 @@ namespace MGF.Physics
                 for (int i = 0; i < mgfList.Length; i++)
                 {
                     mgfList[i].Init();
-                    mgfList[i].MGFStart();
+                    mgfList[i].MGFEnable();
                     m_Objects.Add(mgfList[i]);
                     if (mgfList[i].IsCollisionAble != false)
                     {
