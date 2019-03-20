@@ -29,7 +29,13 @@ namespace MGF.Physics
         private int _level = 0;
         private List<MGFObject> objects;
         private Rectangle rect;
-        
+
+
+        internal Quadtree[] GetNodes()
+        {
+            return nodes;
+        }
+
         /// <summary>
         /// 获得当前节点中心点
         /// </summary>
@@ -99,7 +105,6 @@ namespace MGF.Physics
                     dic[pRect].Remove(pRect);
                 }
             }
-            
         }
 
         /// <summary>
@@ -292,8 +297,12 @@ namespace MGF.Physics
         /// <param name="pRect"></param>
         internal void Move(MGFObject pRect)
         {
-            //计算该物体目前所在的位置是否与前一帧所在位置一致
             Quadtree now = RetrieveQt(pRect);
+            //计算该物体目前所在的位置是否与前一帧所在位置一致
+            if (!dic.ContainsKey(pRect) || dic[pRect]==null)
+            {
+                return;
+            }
             if (now != dic[pRect])
             {
                 //不一致时重新插入物体

@@ -37,10 +37,9 @@ public class ObjectPool
     /// <param name="rc"></param>
     public void DestoryObj(string name, IRecycleAble rc)
     {
+        Assert.IsTrue(rc != null);
         Assert.IsTrue(rcDic.ContainsKey(name));
         rcDic[name].Enqueue(rc);
-        rc.OnDestory();
-
     }
 
     /// <summary>
@@ -55,7 +54,6 @@ public class ObjectPool
         if (rcDic[name].Count > 0)
         {
             IRecycleAble ls = rcDic[name].Dequeue();
-            ls.OnCreate();
             return (T)ls;
         }
         else

@@ -1,5 +1,5 @@
 ﻿public interface IRecycleAble
 {
-    void OnCreate();
-    void OnDestory();
+   int InitNum();
+    string RecycleName();
 }

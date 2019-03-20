@@ -8,30 +8,26 @@ using MGF.Math;
 
 [RequireComponent(typeof(MGFTransform)), RequireComponent(typeof(MGFBoxCollider2D))]
 public class MGFObject : MGFComponet
-{
-
-
-    //是否处在碰撞的状态
-    
+{    
     public Fix64Vector2 Forward = new Fix64Vector2(0, 1);
     public Fix64Vector2 CollisionDir = new Fix64Vector2(0, 1);
 
     public bool IsStatic = true;
     public bool IsCollisionAble = false;
     public bool IsTrigger = false;
-    public string Tag = "";
-
-
-
-
+    public bool IsCollsioning = false;
+    public bool IsMoving = false;
     public MGFCollision bc;
     public MGFTransform tr;
     public MGFView v;
 
+    
+
+    internal override string Tag { get { return "MGFObject"; } }
 
     private Fix64Vector2 initForward = new Fix64Vector2(0, 1);
 
-    //碰撞多边形初始
+    //碰撞多边形初始顶点坐标
     private Fix64Vector2[] vertexInit;
     //碰撞多边形旋转后坐标
     private Fix64Vector2[] vertex;
@@ -42,32 +38,28 @@ public class MGFObject : MGFComponet
     private Fix64Vector2 halfSize = new Fix64Vector2(0, 0);
 
 
+
+
     /// <summary>
     /// 初始化组件
     /// </summary>
-    public override void Init()
+    internal override void Init()
     {
-
         bc = GetComponent<MGFCollision>();
         tr = GetComponent<MGFTransform>();
         v = GetComponent<MGFView>();
-        if (v != null)
+        bc.Init();
+        tr.Init();
+        if (v!=null)
         {
             v.Init();
         }
-        bc.Init();
-        tr.Init();
         vertexInit = bc.GetColliderPos();
         vertex = new Fix64Vector2[vertexInit.Length];
         RotateVec(tr.Rot);
         CalcBoundings();
     }
 
-
-
-    /// <summary>
-    /// 表示转到少度
-    /// </summary>
     internal void RotateTo(Fix64 rot)
     {
         if (tr.Rot == rot)
@@ -87,33 +79,32 @@ public class MGFObject : MGFComponet
         Forward = Fix64Vector2.Rotate(initForward, -rot);
     }
 
-    /// <summary>
-    /// 移动物体
-    /// </summary>
-    /// <param name="朝某个方向移动"></param>
     internal void Move(Fix64Vector2 dir)
     {
-        if (PL == ObjectState.None)
+        if (IsStatic)
         {
-            tr.Pos += dir / (Fix64)5;
-
+            throw new Exception("静态物体不可移动");
         }
-        else if (PL == ObjectState.BeCollision)
+        if (IsCollisionAble == false)
         {
-            tr.Pos += CollisionDir.Nomalize() / (Fix64)5;
+            return;
         }
-
-        GameSecneManager.Instance.MoveObj(this);
+        if (IsCollsioning == false)
+        {
+            tr.Pos += dir / (Fix64)10;
+        }
+        else 
+        {
+            tr.Pos += CollisionDir.Nomalize() / (Fix64)20;
+        }
+        PhysicsManager.Instance.Move(this);
     }
 
-    /// <summary>
-    /// 移动到某一坐标
-    /// </summary>
-    /// <param name="pos"></param>
     internal void MoveTo(Fix64Vector2 pos)
     {
         tr.Pos = pos;
-        GameSecneManager.Instance.MoveObj(this);
+        v.MoveTo();
+        PhysicsManager.Instance.Move(this);
     }
 
     /// <summary>
@@ -156,7 +147,7 @@ public class MGFObject : MGFComponet
     }
 
     /// <summary>
-    /// 获得包围盒的尺寸(一半长宽) 
+    /// 获得包围盒的尺寸
     /// </summary>
     /// <returns></returns>
     public Fix64Vector2 GetHalfSize()
@@ -164,10 +155,6 @@ public class MGFObject : MGFComponet
         return halfSize;
     }
 
-    /// <summary>
-    /// 碰撞时调用
-    /// </summary>
-    /// <param name="obj"></param>
     public virtual void OnMGFCollision(MGFObject obj)
     {
 
@@ -327,6 +314,6 @@ public class MGFObject : MGFComponet
 
     internal virtual void HandleFrameEvent()
     {
-
+        return;
     }
 }

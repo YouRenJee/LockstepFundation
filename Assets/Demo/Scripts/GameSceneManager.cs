@@ -1,21 +1,42 @@
 ﻿
-using System.Collections.Generic;
 using UnityEngine;
 using MGF.Framework;
 using MGF.Physics;
 using MGF.Math;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+public enum CommandType
+{
+    JoyStick = 1,
+    Skill = 2
+}
+
+public class Command
+{
+    public CommandType CmdType;
+    public float value;
+    public Command(CommandType tp)
+    {
+        CmdType = tp;
+    }
+}
 
 public class GameSceneManager : SceneSingletom<GameSceneManager>
 {
-    private Fix64Vector2 m_RecyclePoint = new Fix64Vector2(300, 300);
-
     
-    public GameObject Player;
+    public MGFPlayer Player;
+    public GameObject Bullet;
     public GameObject Ground;
+    public PlayerCamera APlayerCamera;
+    public UIJoyStick JoyStick;
     public int X=0;
     public int Y=0;
 
     private ObjectPool m_Op;
+    private Fix64Vector2 m_RecyclePoint = new Fix64Vector2(300, 300);
+    private Queue<Command> m_Opts = new Queue<Command>();
 
     //private GameObject Bullet;
 
@@ -29,21 +50,60 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
     //    stickDir = dir;
     //}
 
+    //private void Start()
+    //{
+    //    var type = typeof(IRecycleAble);
 
-    private Rectangle GetSecneSize()
+    //    List<Type> types = new List<Type>();
+
+    //    foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+    //    {
+    //        foreach (var tp in assembly.GetTypes())
+    //        {
+    //            if (type.IsAssignableFrom(tp))
+    //            {
+    //                if (tp.IsClass && !tp.IsAbstract)
+    //                {
+    //                    types.Add(tp);
+    //                }
+    //            }
+    //        }
+    //    }
+    //    types.ForEach((t) =>
+    //    {
+    //        var instance = Activator.CreateInstance(t) as IRecycleAble;
+    //        Debug.Log(instance.RecycleName());
+    //        Debug.Log(instance.InitNum());
+    //    });
+
+    //}
+
+    private void Start()
     {
-        Fix64Vector2 halfSize = new Fix64Vector2(0, 0);
-        Fix64Vector2 center = new Fix64Vector2((Fix64)Ground.transform.position.x, (Fix64)Ground.transform.position.z);
-        halfSize.X = (Fix64)X;
-        halfSize.Y = (Fix64)Y;
-        Rectangle rt = new Rectangle(center, halfSize);
-        return rt;
+        GameInit();
     }
 
     public void GameInit()
     {
+        m_Op = new ObjectPool();
+        APlayerCamera.Init();
+        JoyStick.Init();
         CreatePlayer();
+        CreateBullet();
         InitObjctsInScene();
+    }
+
+    private void CreateBullet()
+    {
+        IRecycleAble ra = Bullet.GetComponent<MGFBullet>();
+        Queue<IRecycleAble> q = new Queue<IRecycleAble>();
+        for (int i = 0; i < ra.InitNum(); i++)
+        {
+            MGFBullet bt = Instantiate(Bullet, m_RecyclePoint.ToVector3(),Quaternion.identity).GetComponent<MGFBullet>();
+            bt.IsCollisionAble = false;
+            q.Enqueue(bt);
+        }
+        m_Op.AddNewObj(ra.RecycleName(), q);
     }
 
     private void CreatePlayer()
@@ -57,190 +117,177 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
         PhysicsManager.Instance.Init(obj, GetSecneSize());
     }
 
+    private Rectangle GetSecneSize()
+    {
+        Fix64Vector2 halfSize = new Fix64Vector2(0, 0);
+        Fix64Vector2 center = new Fix64Vector2((Fix64)Ground.transform.position.x, (Fix64)Ground.transform.position.z);
+        halfSize.X = (Fix64)X;
+        halfSize.Y = (Fix64)Y;
+        Rectangle rt = new Rectangle(center, halfSize);
+        return rt;
+    }
+
+    public T CreateFromPool<T>(string name, Fix64Vector2 fv,Fix64 rot) where T : MGFObject
+    {
+        
+        T obj = m_Op.CreateObj<T>(name);
+        obj.IsCollisionAble = true;
+        PhysicsManager.Instance.AddObject(obj);
+        obj.v.Show();
+        obj.MoveTo(fv);
+        obj.RotateTo(rot);
+        obj.MGFStart();
+        return obj;
+    }
+
+    public void DestroyFromPool(MGFObject obj)
+    {
+        Debug.Log(((MGFBullet)obj).m_NowFrame);
+        obj.v.Hide();
+        obj.IsCollisionAble = false;
+        m_Op.DestoryObj(obj.Tag, obj as IRecycleAble);
+        obj.MGFDestroy();
+        obj.MoveTo(m_RecyclePoint);
+        PhysicsManager.Instance.DesObject(obj);
+
+    }
 
 
-
-
-
-
-
-    //private void CreateBullet(int num)
-    //{
-    //    Queue<IRecycleAble> ls = new Queue<IRecycleAble>();
-    //    for (int i = 0; i < num; i++)
-    //    {
-    //        var l = Instantiate(Bullet, RecyclePoint.ToVector3(), Quaternion.identity, Plane.transform).GetComponent<MGFObject>();
-    //        l.IsCollisionAble = false;
-    //        l.IsTrigger = true;
-    //        l.IsStatic = false;
-    //        ls.Enqueue((IRecycleAble)l);
-    //    }
-    //    ObjectPool.AddNewClass("Bullet", ls);
-    //}
-
-
-
-    //private int cnt = 0;
-    //private MGFObject[] obj;
-
-    //public MGFObject[] GetObj()
-    //{
-    //    return obj;
-    //}
-
-    //public void DestroyMGFObj()
-    //{
-
-    //}
-
-
-
-
-    //public void MoveObj(MGFObject obj)
-    //{
-    //    if (!Quadtree.dic.ContainsKey(obj) || Quadtree.dic[obj] == null)
-    //    {
-    //        qt.Insert(obj);
-    //    }
-    //    else
-    //    {
-    //        qt.Move(obj);
-    //    }
-
-    //}
-
-    //private void OnGUI()
-    //{
-    //    GUIStyle s = new GUIStyle();
-    //    s.fontSize = 60;
-    //    GUILayout.Label(syncFrameid.ToString(), s);
-
-    //}
     /// <summary>
     /// 画出四叉树以及动态物体所在节点
     /// </summary>
-    //private void OnDrawGizmos()
-    //{
-    //    if (qt == null)
-    //    {
-    //        return;
-    //    }
-    //    DrawQt(qt);
+    private void OnDrawGizmos()
+    {
+        Quadtree qt = PhysicsManager.Instance.GetQuadtree();
+        if (qt == null)
+        {
+            return;
+        }
+        DrawQt(qt);
 
-    //    DrawDynamicObj();
-    //}
+        DrawDynamicObj();
+    }
 
-    //private void DrawDynamicObj()
-    //{
-    //    Gizmos.color = new Color(0.5f, 0.9f, 0f, 0.3f);
-    //    for (int i = 0; i < dynamicObj.Count; i++)
-    //    {
-    //        if (Quadtree.dic.ContainsKey(dynamicObj[i]) == false || Quadtree.dic[dynamicObj[i]] == null)
-    //        {
-    //            continue;
-    //        }
-    //        Fix64Vector2 center = Quadtree.dic[dynamicObj[i]].GetCenter().center;
-    //        Fix64Vector2 halfSize = Quadtree.dic[dynamicObj[i]].GetCenter().halfSize;
-    //        Gizmos.DrawCube(center.ToVector3(), (halfSize * 2).ToVector3());
-    //    }
-    //}
+    private void DrawDynamicObj()
+    {
+        List<MGFObject> dynamicObj = PhysicsManager.Instance.GetAllDynamicObjs();
+        Gizmos.color = new Color(0.5f, 0.9f, 0f, 0.3f);
+        for (int i = 0; i < dynamicObj.Count; i++)
+        {
+            if (Quadtree.dic.ContainsKey(dynamicObj[i]) == false || Quadtree.dic[dynamicObj[i]] == null)
+            {
+                continue;
+            }
+            Fix64Vector2 center = Quadtree.dic[dynamicObj[i]].GetCenter().center;
+            Fix64Vector2 halfSize = Quadtree.dic[dynamicObj[i]].GetCenter().halfSize;
+            Gizmos.DrawCube(center.ToVector3(), (halfSize * 2).ToVector3());
+        }
+    }
 
-    //private void DrawQt(Quadtree qqt)
-    //{
-    //    Gizmos.color = Color.red;
-    //    if (qqt != null)
-    //    {
-    //        if (qqt.nodes == null)
-    //        {
-    //            return;
-    //        }
-    //        else
-    //        {
-    //            if (qqt.nodes[0] == null)
-    //            {
-    //                return;
-    //            }
-    //        }
-    //        float ctX = (float)qqt.GetCenter().center.X;
-    //        float ctY = (float)qqt.GetCenter().center.Y;
-    //        float width = (float)qqt.GetCenter().halfSize.X;
-    //        float height = (float)qqt.GetCenter().halfSize.Y;
-    //        Vector3 vf = new Vector3(ctX - width, 1, ctY);
-    //        Vector3 vt = new Vector3(ctX + width, 1, ctY);
-    //        Vector3 hf = new Vector3(ctX, 1, ctY - height);
-    //        Vector3 ht = new Vector3(ctX, 1, ctY + height);
+    private void DrawQt(Quadtree qqt)
+    {
+        Gizmos.color = Color.red;
+        if (qqt != null)
+        {
+            if (qqt.GetNodes() == null)
+            {
+                return;
+            }
+            else
+            {
+                if (qqt.GetNodes()[0] == null)
+                {
+                    return;
+                }
+            }
+            float ctX = (float)qqt.GetCenter().center.X;
+            float ctY = (float)qqt.GetCenter().center.Y;
+            float width = (float)qqt.GetCenter().halfSize.X;
+            float height = (float)qqt.GetCenter().halfSize.Y;
+            Vector3 vf = new Vector3(ctX - width, 1, ctY);
+            Vector3 vt = new Vector3(ctX + width, 1, ctY);
+            Vector3 hf = new Vector3(ctX, 1, ctY - height);
+            Vector3 ht = new Vector3(ctX, 1, ctY + height);
 
-    //        Gizmos.DrawLine(vf, vt);
-    //        Gizmos.DrawLine(hf, ht);
-    //        for (int i = 0; i < 4; i++)
-    //        {
-    //            if (qqt.nodes[i] != null)
-    //            {
-    //                DrawQt(qqt.nodes[i]);
-    //            }
-    //        }
-    //    }
-    //}
-
-    //public void OnLogicUpdate(LogicFrame udata)
-    //{
-
-    //    SyncOpts(udata);
-    //    CollectPlayerOpt();
-    //}
-
-    //private void CollectPlayerOpt()
-    //{
-    //    NextFrameOpt nextFrame = new NextFrameOpt();
-    //    nextFrame.frameid = syncFrameid + 1;
-    //    nextFrame.zid = RuntimeData.RoomID;
-    //    nextFrame.uid = RuntimeData.UserID;
-    //    OptionEvent stick = new OptionEvent();
+            Gizmos.DrawLine(vf, vt);
+            Gizmos.DrawLine(hf, ht);
+            for (int i = 0; i < 4; i++)
+            {
+                if (qqt.GetNodes()[i] != null)
+                {
+                    DrawQt(qqt.GetNodes()[i]);
+                }
+            }
+        }
+    }
 
 
-    //    stick.player_id = RuntimeData.UserID;
-    //    stick.opt_type = OptType.JoyStick;
-    //    Fix64 a = new Fix64(stickDir);
-    //    stick.value = a.GetRaw();
-    //    nextFrame.opts.Add(stick);
-    //    for (int i = 0; i < q.Count; i++)
-    //    {
-    //        nextFrame.opts.Add(q.Dequeue());
-    //    }
+    /// <summary>
+    /// FixedUpdate模拟帧事件
+    /// </summary>
+    private void FixedUpdate()
+    {
+        HandleCommand();
+        PhysicsManager.Instance.CheckCollision();
+        CollectPlayerOpt();
+    }
 
-    //    NetworkManager.Instance.UdpSendProtobufCmd(Stype.game_server, Cmd.eNextFrameOpt, nextFrame);
-    //}
+    private void CollectPlayerOpt()
+    {
+        Command cm = UIJoyStick.stick;
+        cm.value = JoyStick.Dir;
+        m_Opts.Enqueue(cm);
+        if (JoyStick.Commands.Count!=0)
+        {
+            for (int i = 0; i < JoyStick.Commands.Count; i++)
+            {
+                m_Opts.Enqueue(JoyStick.Commands.Dequeue());
+            }
+        }
+    }
 
-    //private void SyncOpts(LogicFrame frame)
-    //{
-    //    for (int i = 0; i < frame.unsync_frames.Count; i++)
-    //    {
-    //        if (syncFrameid >= frame.unsync_frames[i].frameid)
-    //        {
-    //            continue;
-    //        }
-    //        OnSyncFrameOpts(frame.unsync_frames[i].opts);
-    //    }
-    //    syncFrameid = frame.frameid;
-    //}
+    private void HandleCommand()
+    {
+        HandlePlayer();
+        HandleOthers();
+    }
 
-    //private void OnSyncFrameOpts(List<OptionEvent> opts)
-    //{
-    //    处理玩家操作
-    //    for (int i = 0; i < opts.Count; i++)
-    //    {
-    //        players[opts[i].player_id].HandleOpt(opts[i]);
-    //    }
+    private void HandleOthers()
+    {
+        List<MGFObject> obj = PhysicsManager.Instance.GetAllObjects();
+        for (int i = 0; i < obj.Count; i++)
+        {
+            obj[i].HandleFrameEvent();
+        }
+    }
 
-    //    处理帧事件
-    //    for (int i = 0; i < dynamicObj.Count; i++)
-    //    {
-    //        dynamicObj[i].HandleFrameEvent();
-    //    }
-    //    计算碰撞
-    //    CheckCollision();
-    //    SyncTower();
-    //}
+    private void HandlePlayer()
+    {
+        for(int i = 0; i < m_Opts.Count; i++)
+        {
+            Command cm = m_Opts.Dequeue();
+            switch (cm.CmdType)
+            {
+                case CommandType.JoyStick:
+                    Fix64 value = (Fix64)cm.value;
+                    if (value != Fix64.Zero)
+                    {
+                        Player.IsMoving = true;
+                        Player.RotateTo(value);
+                        Player.Move(Player.Forward);
+                    }
+                    else
+                    {
+                        Player.IsMoving = false;
+                    }
+                    break;
+                case CommandType.Skill:
+                    Player.Skill();
+                    break;
+            }
+
+        }
+    }
 }
 
 

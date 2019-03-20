@@ -3,66 +3,45 @@ using MGF.Math;
 using UnityEngine;
 
 
-[RequireComponent(typeof(MGFObject))]
 public class MGFView : MGFComponet
 {
-    MGFObject obj;
+    protected MGFObject m_Obj;
 
-    Animator ar;
+    internal override string Tag { get { return "MGFView"; }}
 
-
-    bool isPlayer = false;
-    public override void Init()
+    internal override void Init()
     {
-
-
+        m_Obj = GetComponent<MGFObject>();
     }
 
-    public void Move()
+    public void MoveTo()
     {
-        transform.position = obj.tr.Pos.ToVector3Zero();
+        transform.position = m_Obj.tr.Pos.ToVector3Zero();
     }
 
     public void Rot()
     {
-        transform.rotation = Quaternion.Euler(0, (float)obj.tr.Rot, 0);
+        transform.rotation = Quaternion.Euler(0, (float)m_Obj.tr.Rot, 0);
     }
 
 
 
-    private void Update()
+
+    protected virtual void DefaultViewBehaviour()
     {
-        if (obj == null || obj.IsStatic)
+        if (m_Obj == null || m_Obj.IsStatic)
         {
             return;
         }
-
-        if (isPlayer)
-        {
-        //    switch (obj1.PS)
-        //    {
-        //        case PlayerStateInGame.idle:
-        //            ar.SetBool("IdleToWalk", false);
-        //            transform.position = obj.tr.Pos.ToVector3Zero();
-        //            break;
-        //        case PlayerStateInGame.run:
-        //            ar.SetBool("IdleToWalk", true);
-        //            transform.position = Vector3.Lerp(transform.position, obj.tr.Pos.ToVector3Zero(), Time.deltaTime * 10);
-        //            break;
-        //    }
-        }
-        else
-        {
-            transform.position = Vector3.Lerp(transform.position, obj.tr.Pos.ToVector3Zero(), Time.deltaTime * 10);
-        }
-
-        //旋转视图
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, (float)obj.tr.Rot, 0), Time.deltaTime * 10);
+        transform.position = Vector3.Lerp(transform.position, m_Obj.tr.Pos.ToVector3Zero(), Time.deltaTime * 20);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, (float)m_Obj.tr.Rot, 0), Time.deltaTime * 10);
     }
-    internal void Attack()
+
+    private void Update()
     {
-        ar.SetTrigger("Attack");
+        DefaultViewBehaviour();
     }
+
 
     public void Hide()
     {

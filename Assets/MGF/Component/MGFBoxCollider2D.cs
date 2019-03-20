@@ -5,16 +5,15 @@ using MGF.Math;
 
 public class MGFBoxCollider2D : MGFCollision 
 {
-
-
     //矩形碰撞盒大小
     private Fix64Vector2 halfSize = new Fix64Vector2(0, 0);
     
     //矩形碰撞体有4个顶点
     private Fix64Vector2[] vertex = new Fix64Vector2[4];
-    
 
-    public override void Init()
+
+    internal override string Tag { get { return "MGFBoxCollider2D"; } }
+    internal override void Init()
     {
         Quaternion qua = transform.rotation;
         transform.rotation = Quaternion.Euler(0, 0, 0);
@@ -35,17 +34,6 @@ public class MGFBoxCollider2D : MGFCollision
         vertex[3] = Fix64Vector2.SetVertex( -halfSize.X, halfSize.Y);
         transform.rotation = qua;
     }
-
-
-
-
-
-    //private void Start()
-    //{
-    //    Init();
-    //}
-
-
 
     public override Fix64Vector2[] GetColliderPos()
     {

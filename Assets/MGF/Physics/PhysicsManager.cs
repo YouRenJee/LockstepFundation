@@ -10,10 +10,9 @@ namespace MGF.Physics
     public class PhysicsManager : ServiceModule<PhysicsManager>
     {
 
-        public event Action<MGFObject> OnCollision = null;
 
         private List<MGFObject> m_Objects = new List<MGFObject>();
-        private List<MGFObject> m_DynamicObj = new List<MGFObject>();
+        private List<MGFObject> m_DynamicObjs = new List<MGFObject>();
         private Quadtree m_Qt;
 
         /// <summary>
@@ -30,11 +29,15 @@ namespace MGF.Physics
                 for (int i = 0; i < mgfList.Length; i++)
                 {
                     mgfList[i].Init();
+                    mgfList[i].MGFStart();
                     m_Objects.Add(mgfList[i]);
-                    m_Qt.Insert(mgfList[i]);
+                    if (mgfList[i].IsCollisionAble != false)
+                    {
+                        m_Qt.Insert(mgfList[i]);
+                    }
                     if (mgfList[i].IsStatic == false)
                     {
-                        m_DynamicObj.Add(mgfList[i]);
+                        m_DynamicObjs.Add(mgfList[i]);
                     }
                 }
                 
@@ -47,12 +50,7 @@ namespace MGF.Physics
         /// <param name="mGFObject"></param>
         public void AddObject(MGFObject mGFObject)
         {
-            m_Objects.Add(mGFObject);
             m_Qt.Insert(mGFObject);
-            if (mGFObject.IsStatic == false)
-            {
-                m_DynamicObj.Add(mGFObject);
-            }
         }
 
         /// <summary>
@@ -61,13 +59,35 @@ namespace MGF.Physics
         /// <param name="mGFObject"></param>
         public void DesObject(MGFObject mGFObject)
         {
-            m_Objects.Remove(mGFObject);
-            if (m_DynamicObj.Contains(mGFObject))
-            {
-                m_DynamicObj.Remove(mGFObject);
-            }
             m_Qt.Remove(mGFObject);
+            Quadtree.dic[mGFObject] = null;
+        }
 
+        /// <summary>
+        /// 获得所有物体
+        /// </summary>
+        /// <returns></returns>
+        public List<MGFObject> GetAllObjects()
+        {
+            return m_Objects;
+        }
+
+        /// <summary>
+        /// 获得所有动态物体
+        /// </summary>
+        /// <returns></returns>
+        public List<MGFObject> GetAllDynamicObjs()
+        {
+            return m_DynamicObjs;
+        }
+
+        /// <summary>
+        /// 获得所有物体
+        /// </summary>
+        /// <returns></returns>
+        internal Quadtree GetQuadtree()
+        {
+            return m_Qt;
         }
 
         /// <summary>
@@ -112,11 +132,11 @@ namespace MGF.Physics
         /// <summary>
         /// 碰撞检测
         /// </summary>
-        private void CheckCollision()
+        public void CheckCollision()
         {
-            for (int i = 0; i < m_DynamicObj.Count; i++)
+            for (int i = 0; i < m_DynamicObjs.Count; i++)
             {
-                if (m_DynamicObj[i].IsCollisionAble == false)
+                if (m_DynamicObjs[i].IsCollisionAble == false)
                 {
                     continue;
                 }
@@ -125,30 +145,34 @@ namespace MGF.Physics
                     lcd.Clear();
                 }
                 //获得需要进行碰撞检测的list
-                m_Qt.Retrieve(lcd, m_DynamicObj[i]);
-               // bool flag = false;
+                m_Qt.Retrieve(lcd, m_DynamicObjs[i]);
+                bool flag = false;
                 for (int j = 0; j < lcd.Count; j++)
                 {
                     //先计算包围盒是否碰撞 再通过GJK检测多边形是否碰撞
-                    if (MGFPhysics.CheckBoundings(lcd[j], m_DynamicObj[i]))
+                    if (MGFPhysics.CheckBoundings(lcd[j], m_DynamicObjs[i]))
                     {
-                        if (MGFPhysics.GJK(m_DynamicObj[i], lcd[j]))
+                        if (MGFPhysics.GJK(m_DynamicObjs[i], lcd[j]))
                         {
-                            //flag = true;
-                            m_DynamicObj[i].CalcCollisionDir(lcd[j]);
-                            m_DynamicObj[i].OnMGFCollision(lcd[j]);
+                            flag = true;
+                            m_DynamicObjs[i].CalcCollisionDir(lcd[j]);
+                            m_DynamicObjs[i].OnMGFCollision(lcd[j]);
                         }
                     }
                 }
-                //if (flag)
-                //{
-                //    m_DynamicObj[i].PL = ObjectState.BeCollision;
-                //}
-                //else
-                //{
-                //    m_DynamicObj[i].PL = ObjectState.None;
-                //}
+
+                m_DynamicObjs[i].IsCollsioning = flag;
+
             }
+        }
+
+        /// <summary>
+        /// 物体移动时调用
+        /// </summary>
+        /// <param name="mgf"></param>
+        public void Move(MGFObject mgf)
+        {
+            m_Qt.Move(mgf);
         }
     }
 }

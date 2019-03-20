@@ -4,7 +4,17 @@ using UnityEngine;
 
 public abstract class MGFComponet : MonoBehaviour
 {
-    public abstract void Init();
+    internal virtual void Init()
+    {
+    }
 
+    internal virtual void MGFStart()
+    {
 
+    }
+
+    internal virtual void MGFDestroy()
+    { }
+
+    internal abstract string Tag { get;}
 }
