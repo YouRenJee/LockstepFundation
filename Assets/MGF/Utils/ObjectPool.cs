@@ -9,7 +9,7 @@ public class ObjectPool
 {
 
     private Dictionary<string, Queue<IRecycleAble>> rcDic = new Dictionary<string, Queue<IRecycleAble>>();
-    
+
     /// <summary>
     /// 增加一种新的对象
     /// </summary>
@@ -30,7 +30,6 @@ public class ObjectPool
         }
     }
 
-
     /// <summary>
     /// 回收对象
     /// </summary>
@@ -39,7 +38,6 @@ public class ObjectPool
     public void DestoryObj(string name, IRecycleAble rc)
     {
         Assert.IsTrue(rcDic.ContainsKey(name));
-
         rcDic[name].Enqueue(rc);
         rc.OnDestory();
 

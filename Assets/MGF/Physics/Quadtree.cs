@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MGF.Math;
+using UnityEngine.Assertions;
 
 namespace MGF.Physics
 {
     public class Rectangle
     {
-        public Fix64Vector2 center; //原点
+        public Fix64Vector2 center;
         public Fix64Vector2 halfSize;
-
 
         public Rectangle(Fix64Vector2 center, Fix64Vector2 halfSize)
         {
@@ -19,40 +19,45 @@ namespace MGF.Physics
         }
     }
 
-
-    public class Quadtree 
+    internal class Quadtree
     {
+        internal static Dictionary<MGFObject, Quadtree> dic = new Dictionary<MGFObject, Quadtree>();
 
-
-
-        public static Dictionary<MGFObject, Quadtree> dic = new Dictionary<MGFObject, Quadtree>();
+        private Quadtree[] nodes = null;
         private int MAX_OBJECTS = 3;
         private int MAX_LEVELS = 5;
-
-        private int _level = 0;        // 子节点深度
-        private List<MGFObject> objects;     // 物体数组
+        private int _level = 0;
+        private List<MGFObject> objects;
         private Rectangle rect;
-        public Quadtree[] nodes = null; // 四个子节点
-
-        public Rectangle GetCenter()
+        
+        /// <summary>
+        /// 获得当前节点中心点
+        /// </summary>
+        /// <returns></returns>
+        internal Rectangle GetCenter()
         {
             return rect;
         }
 
-        public bool IsNull()
+        /// <summary>
+        /// 判断当前一个节点是否为空
+        /// </summary>
+        /// <returns></returns>
+        internal bool IsNull()
         {
             bool isnull = true;
             if (objects.Count == 0)
             {
+                if (nodes[0] == null)
+                {
+                    return true;
+                }
                 for (int i = 0; i < nodes.Length; i++)
                 {
-                    if (nodes[i] != null)
+                    isnull = nodes[i].IsNull();
+                    if (isnull == false)
                     {
-                        isnull = nodes[i].IsNull();
-                        if (isnull == false)
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
             }
@@ -63,7 +68,12 @@ namespace MGF.Physics
             return isnull;
         }
 
-        public Quadtree(int level, Rectangle pBounds)
+        /// <summary>
+        /// 生成一棵树
+        /// </summary>
+        /// <param name="level">层</param>
+        /// <param name="pBounds">中心点</param>
+        internal Quadtree(int level, Rectangle pBounds)
         {
             objects = new List<MGFObject>();
             nodes = new Quadtree[4];
@@ -71,13 +81,31 @@ namespace MGF.Physics
             _level = level;
         }
 
-        public void Remove(MGFObject pRect)
+        /// <summary>
+        /// 移除物体
+        /// </summary>
+        /// <param name="pRect"></param>
+        internal void Remove(MGFObject pRect)
         {
+            if (objects.Contains(pRect))
+            {
+                objects.Remove(pRect);
+            }
+            else
+            {
+                if (dic[pRect] !=null)
+                {
+                    Assert.IsTrue(dic[pRect].objects.Contains(pRect));
+                    dic[pRect].Remove(pRect);
+                }
+            }
             
-            objects.Remove(pRect);
         }
 
-        public void Clear()
+        /// <summary>
+        /// 清空树
+        /// </summary>
+        internal void Clear()
         {
             objects.Clear();
 
@@ -91,6 +119,9 @@ namespace MGF.Physics
             }
         }
 
+        /// <summary>
+        /// 分裂树
+        /// </summary>
         private void Split()
         {
             Fix64 subWidth = rect.halfSize.X / (Fix64)2;
@@ -105,6 +136,11 @@ namespace MGF.Physics
             nodes[3] = new Quadtree(_level + 1, new Rectangle(new Fix64Vector2(X + subWidth, Y - subHeight), subSize));
         }
 
+        /// <summary>
+        /// 获得物体所在象限
+        /// </summary>
+        /// <param name="pRect"></param>
+        /// <returns></returns>
         private int GetIndex(MGFObject pRect)
         {
             int index = -1;
@@ -146,7 +182,11 @@ namespace MGF.Physics
             return index;
         }
 
-        public void Insert(MGFObject pRect)
+        /// <summary>
+        /// 插入物体
+        /// </summary>
+        /// <param name="pRect"></param>
+        internal void Insert(MGFObject pRect)
         {
             // 插入到子节点
             if (nodes[0] != null)
@@ -182,7 +222,7 @@ namespace MGF.Physics
                     Split();
                 }
                 // 分裂后要将父节点的物体分给子节点们
-                for (int i = objects.Count-1; i>=0; i--)
+                for (int i = objects.Count - 1; i >= 0; i--)
                 {
                     int index = GetIndex(objects[i]);
                     if (index != -1)
@@ -194,9 +234,12 @@ namespace MGF.Physics
             }
         }
 
-
-
-        public void Retrieve(List<MGFObject> lcd, MGFObject pRect)
+        /// <summary>
+        /// 获得所有可能发生碰撞物体
+        /// </summary>
+        /// <param name="lcd"></param>
+        /// <param name="pRect"></param>
+        internal void Retrieve(List<MGFObject> lcd, MGFObject pRect)
         {
             int index = GetIndex(pRect); //判断属于当前节点的那个nodes上
 
@@ -217,16 +260,21 @@ namespace MGF.Physics
             //加入当前节点上的物体
             for (int i = 0; i < objects.Count; i++)
             {
-                if (objects[i]!= pRect && objects[i].IsCollisionAble == true)
+                if (objects[i] != pRect && objects[i].IsCollisionAble == true)
                 {
                     lcd.Add(objects[i]);
-                } 
+                }
             }
-            
+
 
         }
 
-        public Quadtree RetrieveQt(MGFObject pRect)
+        /// <summary>
+        /// 获得物体所在Quadtree节点
+        /// </summary>
+        /// <param name="pRect"></param>
+        /// <returns></returns>
+        private Quadtree RetrieveQt(MGFObject pRect)
         {
             Quadtree qt = this;
             int index = GetIndex(pRect);
@@ -238,25 +286,21 @@ namespace MGF.Physics
 
         }
 
-
         /// <summary>
-        /// 物体发生移动时
+        /// 物体发生移动时调用
         /// </summary>
         /// <param name="pRect"></param>
-        public void Move(MGFObject pRect)
+        internal void Move(MGFObject pRect)
         {
             //计算该物体目前所在的位置是否与前一帧所在位置一致
-
             Quadtree now = RetrieveQt(pRect);
             if (now != dic[pRect])
             {
+                //不一致时重新插入物体
                 dic[pRect].Remove(pRect);
                 now.Insert(pRect);
             }
         }
-
-
-
     }
 
 }

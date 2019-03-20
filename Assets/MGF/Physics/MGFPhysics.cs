@@ -6,10 +6,10 @@ using MGF.Physics;
 
 namespace MGF.Physics
 {
-    public static class MGFPhysics
+    internal static class MGFPhysics
     {
 
-        public static bool lineIntersection(Fix64Vector2 p0, Fix64Vector2 p1,
+        internal static bool lineIntersection(Fix64Vector2 p0, Fix64Vector2 p1,
                Fix64Vector2 p2, Fix64Vector2 p3, out Fix64Vector2 point)
         {
             Fix64 s02_x, s02_y, s10_x, s10_y, s32_x, s32_y, s_numer, t_numer, denom, t;
@@ -41,39 +41,130 @@ namespace MGF.Physics
             point.Y = p0.Y + (t * s10_y);
             return true;
         }
-        public static List<MGFObject> RayCast2D(Fix64Vector2 start, Fix64Vector2 end)
+
+        internal static bool CheckBoundings(MGFObject a, MGFObject b)
         {
-            List<MGFObject> ls = new List<MGFObject>();
-            MGFObject[] obj = GameSecneManager.Instance.GetObj();
-            for (int i = 0; i < obj.Length; i++)
+            Fix64Vector2 posA = a.GetPos();
+            Fix64Vector2 posB = b.GetPos();
+            return Fix64.Abs(posA.X - posB.X) < a.GetHalfSize().X + b.GetHalfSize().X &&
+                 Fix64.Abs(posA.Y - posB.Y) < a.GetHalfSize().Y + b.GetHalfSize().Y;
+
+        }
+
+        public static bool GJK(MGFObject a, MGFObject b)
+        {
+            Simplex s = new Simplex();
+            Fix64Vector2 dir = a.GetPos() - b.GetPos();
+            s.Add(Support(a, b, dir));
+            dir = -dir;
+
+            while (true)
             {
-                Fix64Vector2 hit;
-                Fix64Vector2[] vertex = obj[i].GetVertex();
-                Fix64Vector2[] vertexN = new Fix64Vector2[vertex.Length];
-                for (int j = 0; j < vertexN.Length; j++)
+                s.Add(Support(a, b, dir));
+                if (Fix64Vector2.Dot(s.GetLast(), dir) <= Fix64.Zero)
                 {
-                    vertexN[j] = vertex[j] + obj[i].GetPos();
-                    
+                    return false;
                 }
-                for (int j = 0; j < 4; j++)
+                else
                 {
-                    int nt = j + 1;
-                    if (j == 3)
+                    if (ContainsOrigin(s, ref dir))
                     {
-                        nt = 0;
-                    }
-                    if (lineIntersection(start, end, vertexN[j], vertexN[nt], out hit))
-                    {
-                        Debug.Log(obj[i].name + " line P1" + vertexN[j] + " P2 " + vertexN[nt] + " hit " + hit);
-                        ls.Add(obj[i]);
-                        break;
+                        return true;
                     }
                 }
             }
-            return ls;
         }
-                
 
+        private static bool ContainsOrigin(Simplex s, ref Fix64Vector2 dir)
+        {
+
+            var a = s.GetLast();
+            var AO = -a;
+            var b = s.GetB();
+            var AB = b - a;
+            if (s.Count() == 3)
+            {
+                var c = s.GetC();
+                var AC = c - a;
+
+                var abPerp = CalcNomal(AC, AB, AB);
+                var acPerp = CalcNomal(AB, AC, AC);
+
+                if (Fix64Vector2.Dot(abPerp, AO) > Fix64.Zero)
+                {
+                    s.Remove(c);
+                    dir = abPerp;
+                }
+                else
+                {
+                    if (Fix64Vector2.Dot(acPerp, AO) > Fix64.Zero)
+                    {
+                        s.Remove(b);
+                        dir = acPerp;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+
+                var abPerp = CalcNomal(AB, AO, AB);
+                dir = abPerp;
+            }
+            return false;
+        }
+
+        private static Fix64Vector2 CalcNomal(Fix64Vector2 a, Fix64Vector2 b, Fix64Vector2 c)
+        {
+            Fix64 z = a.X * b.Y - a.Y * b.X;
+
+            return new Fix64Vector2(-z * c.Y, z * c.X);
+        }
+
+        private static Fix64Vector2 Support(MGFObject a, MGFObject b, Fix64Vector2 d)
+        {
+            Fix64Vector2 InA = a.Support(d);
+            Fix64Vector2 InB = b.Support(-d);
+            return InA - InB;
+        }
+
+        private class Simplex
+        {
+            private List<Fix64Vector2> list = new List<Fix64Vector2>();
+
+            public void Add(Fix64Vector2 point)
+            {
+                list.Add(point);
+            }
+
+
+            public Fix64Vector2 GetLast()
+            {
+                return list[list.Count - 1];
+            }
+
+            public Fix64Vector2 GetB()
+            {
+                return list[list.Count - 2];
+            }
+            public Fix64Vector2 GetC()
+            {
+                return list[list.Count - 3];
+            }
+
+            public void Remove(Fix64Vector2 point)
+            {
+                list.Remove(point);
+            }
+
+            public int Count()
+            {
+                return list.Count;
+            }
+        }
     }
 
 }

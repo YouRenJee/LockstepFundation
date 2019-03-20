@@ -6,30 +6,13 @@ using MGF.Physics;
 using MGF.Math;
 
 
-
-
-public static class OptType
-{
-    public const int JoyStick = 1;
-    public const int Attack = 2;
-    public const int skill1 = 3;
-}
-
-
-
-public enum ObjectState
-{
-    None = 1,
-    BeCollision = 2,
-}
-
 [RequireComponent(typeof(MGFTransform)), RequireComponent(typeof(MGFBoxCollider2D))]
 public class MGFObject : MGFComponet
 {
 
 
     //是否处在碰撞的状态
-    public ObjectState PL = ObjectState.None;
+    
     public Fix64Vector2 Forward = new Fix64Vector2(0, 1);
     public Fix64Vector2 CollisionDir = new Fix64Vector2(0, 1);
 
@@ -214,7 +197,7 @@ public class MGFObject : MGFComponet
             return;
         }
         Fix64Vector2[] vertexO = mgfObject.GetVertex();
-        Fix64Vector2 v1 =Fix64Vector2.Rotate(vertexO[0],-(Fix64)90);
+        Fix64Vector2 v1 = Fix64Vector2.Rotate(vertexO[0], -(Fix64)90);
         Fix64Vector2 v2 = Fix64Vector2.Rotate(vertexO[1], -(Fix64)90);
         Fix64Vector2 v3 = -v1;
         Fix64Vector2 v4 = -v2;
@@ -312,7 +295,7 @@ public class MGFObject : MGFComponet
 
     private void OnDrawGizmos()
     {
-        if (tr == null || vertex==null || vertex.Length == 0)
+        if (tr == null || vertex == null || vertex.Length == 0)
         {
             return;
         }
@@ -321,9 +304,9 @@ public class MGFObject : MGFComponet
 
         for (int i = 0; i < vertex.Length; i++)
         {
-            Gizmos.DrawCube((vertex[i] +GetPos()).ToVector3(), new Vector3(0.3f, 1f, 0.3f));
+            Gizmos.DrawCube((vertex[i] + GetPos()).ToVector3(), new Vector3(0.3f, 1f, 0.3f));
         }
-        
+
     }
 
     /// <summary>
@@ -344,6 +327,6 @@ public class MGFObject : MGFComponet
 
     internal virtual void HandleFrameEvent()
     {
-        
+
     }
 }

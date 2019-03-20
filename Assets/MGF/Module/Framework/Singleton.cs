@@ -68,7 +68,7 @@ namespace MGF.Framework
     }
 
 
-    public class GameSingletom<T> : MonoBehaviour
+    public class SceneSingletom<T> : MonoBehaviour
         where T : Component
     {
         private static T _instance = null;
