@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MGFBullet : MGFObject, IRecycleAble
+public class Bullet : MGFObject, IRecycleAble
 {
     public int PlayerID = -1;
     public float m_NowFrame = 0;
@@ -24,9 +24,9 @@ public class MGFBullet : MGFObject, IRecycleAble
 
     public override void OnMGFCollision(MGFObject obj)
     {
-        if (obj is MGFPlayer)
+        if (obj is Player)
         {
-            if (((MGFPlayer)obj).PlayerID == PlayerID)
+            if (((Player)obj).PlayerID == PlayerID)
             {
                 return;
             }

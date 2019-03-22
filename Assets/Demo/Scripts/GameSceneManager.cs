@@ -26,7 +26,7 @@ public class Command
 public class GameSceneManager : SceneSingletom<GameSceneManager>
 {
     
-    public MGFPlayer Player;
+    public Player Player;
     public GameObject Bullet;
     public GameObject Ground;
     public PlayerCamera APlayerCamera;
@@ -56,11 +56,11 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
 
     private void CreateBullet()
     {
-        IRecycleAble ra = Bullet.GetComponent<MGFBullet>();
+        IRecycleAble ra = Bullet.GetComponent<Bullet>();
         Queue<IRecycleAble> q = new Queue<IRecycleAble>();
         for (int i = 0; i < ra.InitNum(); i++)
         {
-            MGFBullet bt = Instantiate(Bullet, m_RecyclePoint.ToVector3(),Quaternion.identity).GetComponent<MGFBullet>();
+            Bullet bt = Instantiate(Bullet, m_RecyclePoint.ToVector3(),Quaternion.identity).GetComponent<Bullet>();
             bt.IsCollisionAble = false;
             q.Enqueue(bt);
         }

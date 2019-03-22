@@ -13,7 +13,7 @@ public enum PlayerStateInGame
 }
 
 [RequireComponent(typeof(PlayerView))]
-public class MGFPlayer : MGFObject
+public class Player : MGFObject
 {
     public int PlayerID = 1;
     private PlayerView pv;
@@ -25,7 +25,7 @@ public class MGFPlayer : MGFObject
 
     internal void Skill()
     {
-        MGFBullet bt= GameSceneManager.Instance.CreateFromPool<MGFBullet>("BULLET",GetPos() + Forward.Nomalize() , tr.Rot);
+        Bullet bt= GameSceneManager.Instance.CreateFromPool<Bullet>("BULLET",GetPos() + Forward.Nomalize() , tr.Rot);
         bt.PlayerID = PlayerID;
         pv.Skill();
     }
