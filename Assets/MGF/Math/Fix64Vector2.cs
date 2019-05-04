@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MGF.Math
 {
-    public class Fix64Vector2
+    public struct Fix64Vector2
     {
         public Fix64 X;
         public Fix64 Y ;
