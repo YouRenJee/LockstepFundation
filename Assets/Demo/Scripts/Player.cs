@@ -19,6 +19,7 @@ public class Player : MGFObject
     private PlayerView pv;
     internal override void Init()
     {
+        Fix64 x = new Fix64(32);
         base.Init();
         pv = GetComponent<PlayerView>();
     }

@@ -22,7 +22,6 @@ namespace MGF.Physics
     internal class Quadtree
     {
         internal static Dictionary<MGFObject, Quadtree> dic = new Dictionary<MGFObject, Quadtree>();
-
         private Quadtree[] nodes = null;
         private int MAX_OBJECTS = 3;
         private int MAX_LEVELS = 5;
@@ -244,7 +243,7 @@ namespace MGF.Physics
         /// </summary>
         /// <param name="lcd"></param>
         /// <param name="pRect"></param>
-        internal void Retrieve(List<MGFObject> lcd, MGFObject pRect)
+        internal void Retrieve(ICollection<MGFObject> lcd, MGFObject pRect)
         {
             int index = GetIndex(pRect); //判断属于当前节点的那个nodes上
 
@@ -295,19 +294,25 @@ namespace MGF.Physics
         /// 物体发生移动时调用
         /// </summary>
         /// <param name="pRect"></param>
-        internal void Move(MGFObject pRect)
+        internal bool Move(MGFObject pRect)
         {
             Quadtree now = RetrieveQt(pRect);
-            //计算该物体目前所在的位置是否与前一帧所在位置一致
+            
             if (!dic.ContainsKey(pRect) || dic[pRect]==null)
             {
-                return;
+                return false;
             }
+            //计算该物体目前所在的节点是否与前一帧所在位置一致
             if (now != dic[pRect])
             {
                 //不一致时重新插入物体
                 dic[pRect].Remove(pRect);
                 now.Insert(pRect);
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
     }

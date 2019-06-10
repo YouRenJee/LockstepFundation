@@ -16,5 +16,5 @@ public abstract class MGFComponet : MonoBehaviour
     internal virtual void MGFDestroy()
     { }
 
-    internal abstract string Tag { get;}
+    internal virtual string Tag => this.name;
 }

@@ -67,6 +67,9 @@ public class MGFObject : MGFComponet
         RotateVec(tr.Rot);
         CalcBoundings();
     }
+
+
+
     private void RotateVec(Fix64 rot)
     {
         for (int i = 0; i < vertexInit.Length; i++)
@@ -86,7 +89,7 @@ public class MGFObject : MGFComponet
         {
             return;
         }
-        if (IsCollsioning == false)
+        if (IsCollsioning == false ||IsTrigger)
         {
             tr.Pos += dir / (Fix64)10;
         }
@@ -175,11 +178,7 @@ public class MGFObject : MGFComponet
 
     internal void CalcCollisionDir(MGFObject mgfObject)
     {
-        if (IsTrigger == true)
-        {
-            CollisionDir = Forward;
-            return;
-        }
+        if (IsTrigger) return;
         Fix64Vector2[] vertexO = mgfObject.GetVertex();
         Fix64Vector2 v1 = Fix64Vector2.Rotate(vertexO[0], -(Fix64)90);
         Fix64Vector2 v2 = Fix64Vector2.Rotate(vertexO[1], -(Fix64)90);

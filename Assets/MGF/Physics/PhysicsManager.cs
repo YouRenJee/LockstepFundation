@@ -11,8 +11,8 @@ namespace MGF.Physics
     {
 
 
-        private List<MGFObject> m_Objects = new List<MGFObject>();
-        private List<MGFObject> m_DynamicObjs = new List<MGFObject>();
+        private HashSet<MGFObject> m_Objects = new HashSet<MGFObject>();
+        private HashSet<MGFObject> m_DynamicObjs = new HashSet<MGFObject>();
         private Quadtree m_Qt;
 
         /// <summary>
@@ -23,9 +23,9 @@ namespace MGF.Physics
         public void Init(MGFObject[] mgfList, Rectangle planePos)
         {
             m_Qt = new Quadtree(0, planePos);
-            if (mgfList != null && mgfList.Length!=0)
+            if (mgfList != null && mgfList.Length != 0)
             {
-                
+
                 for (int i = 0; i < mgfList.Length; i++)
                 {
                     mgfList[i].Init();
@@ -40,7 +40,7 @@ namespace MGF.Physics
                         m_DynamicObjs.Add(mgfList[i]);
                     }
                 }
-                
+
             }
         }
 
@@ -67,7 +67,7 @@ namespace MGF.Physics
         /// 获得所有物体
         /// </summary>
         /// <returns></returns>
-        public List<MGFObject> GetAllObjects()
+        public IEnumerable<MGFObject> GetAllObjects()
         {
             return m_Objects;
         }
@@ -76,7 +76,7 @@ namespace MGF.Physics
         /// 获得所有动态物体
         /// </summary>
         /// <returns></returns>
-        public List<MGFObject> GetAllDynamicObjs()
+        public IEnumerable<MGFObject> GetAllDynamicObjs()
         {
             return m_DynamicObjs;
         }
@@ -96,17 +96,17 @@ namespace MGF.Physics
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public List<MGFObject> RayCast2D(Fix64Vector2 start, Fix64Vector2 end)
+        public IEnumerable<MGFObject> RayCast2D(Fix64Vector2 start, Fix64Vector2 end)
         {
-            List<MGFObject> ls = new List<MGFObject>();
-            for (int i = 0; i < m_Objects.Count; i++)
+            HashSet<MGFObject> ls = new HashSet<MGFObject>();
+            foreach (var item in m_Objects)
             {
                 Fix64Vector2 hit;
-                Fix64Vector2[] vertex = m_Objects[i].GetVertex();
+                Fix64Vector2[] vertex = item.GetVertex();
                 Fix64Vector2[] vertexN = new Fix64Vector2[vertex.Length];
                 for (int j = 0; j < vertexN.Length; j++)
                 {
-                    vertexN[j] = vertex[j] + m_Objects[i].GetPos();
+                    vertexN[j] = vertex[j] + item.GetPos();
 
                 }
                 for (int j = 0; j < 4; j++)
@@ -118,8 +118,8 @@ namespace MGF.Physics
                     }
                     if (MGFPhysics.lineIntersection(start, end, vertexN[j], vertexN[nt], out hit))
                     {
-                        Debug.Log(m_Objects[i].name + " line P1" + vertexN[j] + " P2 " + vertexN[nt] + " hit " + hit);
-                        ls.Add(m_Objects[i]);
+                        Debug.Log(item.name + " line P1" + vertexN[j] + " P2 " + vertexN[nt] + " hit " + hit);
+                        ls.Add(item);
                         break;
                     }
                 }
@@ -127,16 +127,15 @@ namespace MGF.Physics
             return ls;
         }
 
-        private List<MGFObject> lcd = new List<MGFObject>();
-        
+        private HashSet<MGFObject> lcd = new HashSet<MGFObject>();
         /// <summary>
         /// 碰撞检测
         /// </summary>
         public void CheckCollision()
         {
-            for (int i = 0; i < m_DynamicObjs.Count; i++)
+            foreach (var item in m_DynamicObjs)
             {
-                if (m_DynamicObjs[i].IsCollisionAble == false)
+                if (item.IsCollisionAble == false)
                 {
                     continue;
                 }
@@ -145,25 +144,24 @@ namespace MGF.Physics
                     lcd.Clear();
                 }
                 //获得需要进行碰撞检测的list
-                m_Qt.Retrieve(lcd, m_DynamicObjs[i]);
+                m_Qt.Retrieve(lcd, item);
                 bool flag = false;
-                for (int j = 0; j < lcd.Count; j++)
+                foreach (var item2 in lcd)
                 {
-                    //先计算包围盒是否碰撞 再通过GJK检测多边形是否碰撞
-                    if (MGFPhysics.CheckBoundings(lcd[j], m_DynamicObjs[i]))
+                    if (MGFPhysics.CheckBoundings(item2, item))
                     {
-                        if (MGFPhysics.GJK(m_DynamicObjs[i], lcd[j]))
+                        if (MGFPhysics.GJK(item, item2))
                         {
                             flag = true;
-                            m_DynamicObjs[i].CalcCollisionDir(lcd[j]);
-                            m_DynamicObjs[i].OnMGFCollision(lcd[j]);
+                            item.CalcCollisionDir(item2);
+                            item.OnMGFCollision(item2);
+                            Debug.Log(item.name + " " + item2.name);
                         }
                     }
                 }
-
-                m_DynamicObjs[i].IsCollsioning = flag;
-
+                item.IsCollsioning = flag;
             }
+            
         }
 
         /// <summary>

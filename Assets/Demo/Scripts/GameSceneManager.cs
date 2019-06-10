@@ -130,16 +130,17 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
 
     private void DrawDynamicObj()
     {
-        List<MGFObject> dynamicObj = PhysicsManager.Instance.GetAllDynamicObjs();
+        var dynamicObj = PhysicsManager.Instance.GetAllDynamicObjs();
         Gizmos.color = new Color(0.5f, 0.9f, 0f, 0.3f);
-        for (int i = 0; i < dynamicObj.Count; i++)
+
+        foreach (var item in dynamicObj)
         {
-            if (Quadtree.dic.ContainsKey(dynamicObj[i]) == false || Quadtree.dic[dynamicObj[i]] == null)
+            if (Quadtree.dic.ContainsKey(item) == false || Quadtree.dic[item] == null)
             {
                 continue;
             }
-            Fix64Vector2 center = Quadtree.dic[dynamicObj[i]].GetCenter().center;
-            Fix64Vector2 halfSize = Quadtree.dic[dynamicObj[i]].GetCenter().halfSize;
+            Fix64Vector2 center = Quadtree.dic[item].GetCenter().center;
+            Fix64Vector2 halfSize = Quadtree.dic[item].GetCenter().halfSize;
             Gizmos.DrawCube(center.ToVector3(), (halfSize * 2).ToVector3());
         }
     }
@@ -214,11 +215,12 @@ public class GameSceneManager : SceneSingletom<GameSceneManager>
 
     private void HandleOthers()
     {
-        List<MGFObject> obj = PhysicsManager.Instance.GetAllObjects();
-        for (int i = 0; i < obj.Count; i++)
+        var objs = PhysicsManager.Instance.GetAllObjects();
+        foreach (var item in objs)
         {
-            obj[i].HandleFrameEvent();
+            item.HandleFrameEvent();
         }
+
     }
 
     private void HandlePlayer()

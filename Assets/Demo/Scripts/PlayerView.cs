@@ -21,7 +21,6 @@ public class PlayerView : MGFView
     protected override void DefaultViewBehaviour()
     {
         base.DefaultViewBehaviour();
-
         if (m_Obj.IsMoving)
         {
             m_anim.SetBool("IdleToWalk", true);
